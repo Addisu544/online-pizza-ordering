@@ -8,7 +8,7 @@ const SuperChefPageTwo = () => {
     
     <Container>
       <Typography variant="h2" align="center" gutterBottom>
-       super chef page two
+      noting still now!
       </Typography>
      
      

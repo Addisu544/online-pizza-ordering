@@ -259,8 +259,25 @@
 
 // export default HomePage;
 
-//hide login button
+// hide login button
 // src/HomePage.js
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom'; // Using useNavigate
@@ -280,7 +297,7 @@ const UserDashboard = () => {
             <Typography variant="h2" align="center" gutterBottom>
                 Pizza Ordering Service
             </Typography>
-            {!token && ( // Only show the login button if the user is not logged in
+            {/* {!token && ( // Only show the login button if the user is not logged in
                 <Button 
                     variant="contained" 
                     color="primary" 
@@ -289,7 +306,7 @@ const UserDashboard = () => {
                 >
                     Login
                 </Button>
-            )}
+            )} */}
 
             <PizzaMenu />
         </Container>
@@ -297,3 +314,6 @@ const UserDashboard = () => {
 };
 
 export default UserDashboard;
+// //for cart         
+
+

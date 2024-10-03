@@ -48,8 +48,8 @@ const AdminPage = () => {
     };
 
     const menuItems = [
-        { label: 'delivery1', path: 'deliveryone' },
-        { label: 'delivery2', path: 'deliverytwo' },
+        { label: 'Home', path: 'deliveryone' },
+        { label: 'second page', path: 'deliverytwo' },
         
     ];
     const token = localStorage.getItem('token');

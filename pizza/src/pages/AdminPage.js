@@ -225,7 +225,10 @@ import StaffRegistration from '../components/StaffRegistration';
 import AddPizza from '../components/AddPizza';
 import AdminDashboard from '../components/AdminDashboard';
 import MenuDrawer from '../components/MenuDrawer';
-import UserBar from '../components/UserBar'
+import UserBar from '../components/UserBar';
+import CustomerData from '../components/CustomerData';
+import StaffData from '../components/StaffData'
+import PizzaTable from '../components/PizzaTable'
 const AdminPage = () => {
     const [drawerOpen, setDrawerOpen] = React.useState(false);
 
@@ -237,9 +240,13 @@ const AdminPage = () => {
     };
 
     const menuItems = [
-        { label: 'Staff', path: 'staff' },
+        { label: 'Home', path: 'home' }, 
+        { label: 'Staff Registration', path: 'staffregistration' },
         { label: 'Add Pizza', path: 'addpizza' },
-        { label: 'Data Table', path: 'data-table' },
+        // { label: 'Data Table', path: 'data-table' },
+        { label: 'Staffs', path: 'staffs' },
+        { label: 'Customers', path: 'customers' },
+        { label: 'Pizzas', path: 'pizzas' },
     ];
 
     const token = localStorage.getItem('token');
@@ -270,9 +277,13 @@ const AdminPage = () => {
 
             <Container>
                 <Routes>
-                    <Route path="staff" element={<StaffRegistration />} />
+                    <Route path="home" element={<AdminDashboard />} />
+                    <Route path="staffregistration" element={<StaffRegistration />} />
                     <Route path="addpizza" element={<AddPizza />} />
-                    <Route path="data-table" element={<DataTable />} />
+                    {/* <Route path="data-table" element={<DataTable />} /> */}
+                    <Route path="staffs" element={<StaffData />} />
+                    <Route path="customers" element={<CustomerData />} />
+                    <Route path="pizzas" element={<PizzaTable />} />
                     <Route path="/" element={<AdminDashboard />} /> {/* Default route */}
                 </Routes>
             </Container>

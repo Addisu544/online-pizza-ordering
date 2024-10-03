@@ -195,8 +195,8 @@ const SuperChefPage = () => {
     };
 
     const menuItems = [
-        { label: 'SuperChef Page One', path: 'Superone' },
-        { label: 'SuperChef Page Two', path: 'Supertwo' },
+        { label: 'Home', path: 'Superone' },
+        { label: 'second page', path: 'Supertwo' },
     ];
 
     const token = localStorage.getItem('token');

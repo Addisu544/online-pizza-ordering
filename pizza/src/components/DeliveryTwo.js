@@ -8,7 +8,7 @@ const DeliveryTwo = () => {
     
     <Container>
       <Typography variant="h2" align="center" gutterBottom>
-       delivery two
+       noting still now!
       </Typography>
      
      

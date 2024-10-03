@@ -447,6 +447,114 @@
 //mesqel mata
 
 
+// import React, { useState, useEffect } from 'react';
+// import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+// import HomePage from './HomePage';
+// import LoginPage from './components/LoginPage';
+// import AdminPage from './pages/AdminPage';
+// import SuperChefPage from './pages/SuperChefPage';
+// import DeliveryPage from './pages/DeliveryPage';
+// import CustomerPage from './pages/CustomerPage'
+// import { AbilityProvider } from './AbilityContext';
+// import { Ability } from '@casl/ability'; // Make sure this line is included
+// import { jwtDecode } from 'jwt-decode';
+// import defineAbilitiesFor from './abilities'; // Ensure this function is defined correctly
+// import ProtectedRoute from './ProtectedRoute';
+// import TopBar from './components/TopBar';
+// import UserDashboard from './components/UserDashboard'
+
+// import LogOut from './components/LogOut';
+// const App = () => {
+//     const [ability, setAbility] = useState(new Ability());
+
+//     useEffect(() => {
+//         const token = localStorage.getItem('token');
+//         if (token) {
+//             const decoded = jwtDecode(token);
+//             setAbility(defineAbilitiesFor(decoded.role)); // Set ability based on decoded role
+//         }
+//     }, []);
+
+//     return (
+//         <AbilityProvider value={{ ability, setAbility }}>
+//             <Router>
+//                 {/* <TopBar /> */}
+//                 <Routes>
+//                     <Route path="/" element={<HomePage />} />
+//                     {/* <Route path="/" element={<UserDashboard />} /> */}
+
+//                     <Route path="/login" element={<LoginPage />} />
+//                     <Route path="/logout" element={<LogOut />} />
+//                     <Route 
+//                         path="/admin/*" 
+//                         element={
+//                             <ProtectedRoute requiredAction="manage" resource="all">
+//                                 <AdminPage />
+//                             </ProtectedRoute>
+//                         } 
+//                     />
+//                     <Route 
+//                         path="/chef/*" 
+//                         element={
+//                             <ProtectedRoute requiredAction="read" resource="Order">
+//                                 <SuperChefPage />
+//                             </ProtectedRoute>
+//                         } 
+//                     />
+//                     <Route 
+//                         path="/delivery/*" 
+//                         element={
+//                             <ProtectedRoute requiredAction="read" resource="Order">
+//                                 <DeliveryPage />
+//                             </ProtectedRoute>
+//                         } 
+//                     />
+//                     <Route 
+//                         path="/customer/*" 
+//                         element={
+//                             <ProtectedRoute requiredAction="read" resource="Menu">
+//                                 <CustomerPage />
+//                             </ProtectedRoute>
+//                         } 
+//                     />
+//                     <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} />
+//                 </Routes>
+//             </Router>
+//         </AbilityProvider>
+//     );
+// };
+
+// export default App;
+// //user cart
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import HomePage from './HomePage';
@@ -454,16 +562,18 @@ import LoginPage from './components/LoginPage';
 import AdminPage from './pages/AdminPage';
 import SuperChefPage from './pages/SuperChefPage';
 import DeliveryPage from './pages/DeliveryPage';
-import CustomerPage from './pages/CustomerPage'
+import CustomerPage from './pages/CustomerPage';
 import { AbilityProvider } from './AbilityContext';
-import { Ability } from '@casl/ability'; // Make sure this line is included
+import { Ability } from '@casl/ability';
 import { jwtDecode } from 'jwt-decode';
-import defineAbilitiesFor from './abilities'; // Ensure this function is defined correctly
+import defineAbilitiesFor from './abilities';
 import ProtectedRoute from './ProtectedRoute';
 import TopBar from './components/TopBar';
-import UserDashboard from './components/UserDashboard'
-
+import UserDashboard from './components/UserDashboard';
 import LogOut from './components/LogOut';
+import UserRegistration from './components/UserRegistration'
+import { CartProvider } from './components/CartContext';
+import { AuthProvider } from './context/AuthContext';
 const App = () => {
     const [ability, setAbility] = useState(new Ability());
 
@@ -471,57 +581,60 @@ const App = () => {
         const token = localStorage.getItem('token');
         if (token) {
             const decoded = jwtDecode(token);
-            setAbility(defineAbilitiesFor(decoded.role)); // Set ability based on decoded role
+            setAbility(defineAbilitiesFor(decoded.role));
         }
     }, []);
 
     return (
         <AbilityProvider value={{ ability, setAbility }}>
-            <Router>
-                {/* <TopBar /> */}
-                <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    {/* <Route path="/" element={<UserDashboard />} /> */}
-
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route path="/logout" element={<LogOut />} />
-                    <Route 
-                        path="/admin/*" 
-                        element={
-                            <ProtectedRoute requiredAction="manage" resource="all">
-                                <AdminPage />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route 
-                        path="/chef/*" 
-                        element={
-                            <ProtectedRoute requiredAction="read" resource="Order">
-                                <SuperChefPage />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route 
-                        path="/delivery/*" 
-                        element={
-                            <ProtectedRoute requiredAction="read" resource="Order">
-                                <DeliveryPage />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route 
-                        path="/customer/*" 
-                        element={
-                            <ProtectedRoute requiredAction="read" resource="Menu">
-                                <CustomerPage />
-                            </ProtectedRoute>
-                        } 
-                    />
-                    <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} />
-                </Routes>
-            </Router>
+            <AuthProvider>
+            <CartProvider>
+                <Router>
+                    <Routes>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/login" element={<LoginPage />} />
+                        <Route path="/logout" element={<LogOut />} />
+                        <Route path="/UserRegistration" element={<UserRegistration />} />
+                        <Route 
+                            path="/admin/*" 
+                            element={
+                                <ProtectedRoute requiredAction="manage" resource="all">
+                                    <AdminPage />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/chef/*" 
+                            element={
+                                <ProtectedRoute requiredAction="read" resource="Order">
+                                    <SuperChefPage />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/delivery/*" 
+                            element={
+                                <ProtectedRoute requiredAction="read" resource="Order">
+                                    <DeliveryPage />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route 
+                            path="/customer/*" 
+                            element={
+                                <ProtectedRoute requiredAction="read" resource="Menu">
+                                    <CustomerPage />
+                                </ProtectedRoute>
+                            } 
+                        />
+                        <Route path="/unauthorized" element={<div>You are not authorized to view this page.</div>} />
+                    </Routes>
+                </Router>
+            </CartProvider>
+            </AuthProvider>
         </AbilityProvider>
     );
 };
 
 export default App;
+

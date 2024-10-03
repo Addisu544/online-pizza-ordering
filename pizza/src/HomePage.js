@@ -372,7 +372,7 @@ const HomePage = () => {
                 <Typography variant="h2" align="center" gutterBottom>
                     Pizza Ordering Service
                 </Typography>
-                {!isLoggedIn && (
+                {/* {!isLoggedIn && (
                     <Button 
                         variant="contained" 
                         color="primary" 
@@ -381,7 +381,7 @@ const HomePage = () => {
                     >
                         Login
                     </Button>
-                )}
+                )} */}
                 <PizzaMenu />
             </Container>
         </>
