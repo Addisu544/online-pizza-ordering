@@ -661,6 +661,7 @@
 
 
 
+import axios from 'axios';
 
 import React, { useEffect, useState, useContext } from 'react';
 import {
@@ -677,7 +678,7 @@ import {
     FormControlLabel,
 } from '@mui/material';
 import { CardMedia, Box ,Divider} from '@mui/material';
-import { fetchPizzas } from '../PizzaInfo';
+// import { fetchPizzas } from '../PizzaInfo';
 import { CartContext } from './CartContext';
 
 const PizzaMenu = () => {
@@ -688,6 +689,22 @@ const PizzaMenu = () => {
     const [selectedPizza, setSelectedPizza] = useState(null);
     const [selectedToppings, setSelectedToppings] = useState([]);
     const { addToCart } = useContext(CartContext);
+
+
+
+
+    const fetchPizzas = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/pizzas');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching pizzas:', error);
+            throw new Error('Failed to fetch pizza data');
+        }
+    };
+
+
+
 
     useEffect(() => {
         const loadPizzas = async () => {
@@ -773,9 +790,16 @@ const PizzaMenu = () => {
         <Typography variant="h6" color="primary" sx={{ marginBottom: 1 }}>
           ${typeof pizza.price === 'number' ? pizza.price.toFixed(2) : pizza.price}
         </Typography>
-        <Typography variant="body2" color="text.secondary">
+        {/* <Typography variant="body2" color="text.secondary">
           Toppings: {pizza.toppings.join(', ')}
-        </Typography>
+        </Typography> */}
+
+<Typography variant="body2" color="text.secondary">
+    Toppings: {pizza.toppings.split(', ').join(', ')}
+</Typography>
+
+
+
         <Box mt={2}>
           <Button 
             variant="contained" color="secondary" 
@@ -794,7 +818,7 @@ const PizzaMenu = () => {
             {/* Dialog for selecting toppings */}
             <Dialog open={openDialog} onClose={handleDialogClose}>
                 <DialogTitle>Select Toppings</DialogTitle>
-                <DialogContent>
+                {/* <DialogContent>
                     {selectedPizza && selectedPizza.toppings.map((topping, index) => (
                         <FormControlLabel
                             key={index}
@@ -807,7 +831,34 @@ const PizzaMenu = () => {
                             label={topping}
                         />
                     ))}
-                </DialogContent>
+                </DialogContent> */}
+           
+           <DialogContent>
+    {selectedPizza && selectedPizza.toppings && (
+        <>
+            {/* Log the toppings type and value for debugging */}
+            {console.log('Toppings data type:', typeof selectedPizza.toppings)}
+            {console.log('Toppings value:', selectedPizza.toppings)}
+
+            {/* Convert the toppings string to an array and map over it */}
+            {selectedPizza.toppings.split(',').map((topping, index) => (
+                <FormControlLabel
+                    key={index}
+                    control={
+                        <Checkbox
+                            checked={selectedToppings.includes(topping.trim())} // Check if topping is selected
+                            onChange={() => handleToppingChange(topping.trim())} // Toggle topping selection
+                        />
+                    }
+                    label={topping.trim()} // Trim each topping for display
+                />
+            ))}
+        </>
+    )}
+</DialogContent>
+          
+
+
                 <DialogActions>
                     <Button onClick={handleDialogClose} color="primary">
                         Cancel

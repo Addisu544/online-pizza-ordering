@@ -1,109 +1,7 @@
-
-// const express = require('express');
-// const bodyParser = require('body-parser');
-// const cors = require('cors');
-// const { Pool } = require('pg');
-// const bcrypt = require('bcryptjs'); // Import bcrypt for password hashing
-
-// const app = express();
-// const port = 5000;
-
-// // Middleware
-// app.use(cors());
-// app.use(bodyParser.json());
-
-// // PostgreSQL connection
-// const pool = new Pool({
-//     user: 'postgres',
-//     host: 'localhost',
-//     database: 'gg',
-//     password: '1234',
-//     port: 5432,
-// });
-
-// // Test the database connection
-// pool.connect()
-//     .then(() => {
-//         console.log('Database connected successfully');
-//     })
-//     .catch((err) => {
-//         console.error('Database connection error:', err);
-//     });
-
-// // Route to register a new customer
-// app.post('/api/register', async (req, res) => {
-//     const { first_name, last_name, phone_number, address, email, country, subcity, kebele, phobia, password } = req.body;
-//     const role = 'customer'; // Set default role to customer
-
-//     try {
-//         // Hash the password
-//         const hashedPassword = await bcrypt.hash(password, 10);
-
-//         const result = await pool.query(
-//             'INSERT INTO customers (first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-//             [first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, hashedPassword]
-//         );
-//         res.status(201).json(result.rows[0]);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ error: 'Error registering customer' });
-//     }
-// });
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // Route to register a new staff
-// app.post('/api/register-staff', async (req, res) => {
-//     const { first_name, last_name, phone, email, password, role } = req.body;
-
-//     try {
-//         // Hash the password
-//         const hashedPassword = await bcrypt.hash(password, 10);
-
-//         const result = await pool.query(
-//             'INSERT INTO staffs (first_name, last_name, phone, email, password, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-//             [first_name, last_name, phone, email, hashedPassword, role]
-//         );
-//         res.status(201).json(result.rows[0]);
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ error: 'Error registering staff' });
-//     }
-
-// });
-
-
-
-
-
-
-
-
-
-
-
-// // Start server
-// app.listen(port, () => {
-//     console.log(`Server running on http://localhost:${port}`);
-// });
-/////////////////?????????????????????????????????????????????????????????????
-
-
-// server.js
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { Pool } = require('pg');
+const mysql = require('mysql2');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -114,23 +12,54 @@ const port = 5000;
 app.use(cors());
 app.use(bodyParser.json());
 
-// PostgreSQL connection
-const pool = new Pool({
-    user: 'postgres',
+// MySQL connection
+const connection = mysql.createConnection({
     host: 'localhost',
-    database: 'gg',
-    password: '1234',
-    port: 5432,
+    user: 'root',  // Replace with your MySQL username
+    password: '',  // Replace with your MySQL password
+    database: 'gg',  // Your database name
 });
 
 // Test the database connection
-pool.connect()
-    .then(() => {
-        console.log('Database connected successfully');
-    })
-    .catch((err) => {
+connection.connect((err) => {
+    if (err) {
         console.error('Database connection error:', err);
-    });
+        return;
+    }
+    console.log('Database connected successfully');
+});
+
+
+
+
+
+
+// Route to register a new customer
+app.post('/api/register', async (req, res) => {
+    const { first_name, last_name, phone_number, address, email, country, subcity, kebele, phobia, password } = req.body;
+    const role = 'customer'; // Set default role to customer
+
+    try {
+        // Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Insert the new customer into the database
+        const query = `
+            INSERT INTO customers (first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, password)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+        
+        const result = await connection.promise().query(query, [first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, hashedPassword]);
+
+        res.status(201).json({ id: result[0].insertId, first_name, last_name, email }); // Return the newly created customer info
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Error registering customer' });
+    }
+});
+
+
+
+
 
 // Route to register a new staff
 app.post('/api/register-staff', async (req, res) => {
@@ -138,11 +67,16 @@ app.post('/api/register-staff', async (req, res) => {
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(
-            'INSERT INTO staffs (first_name, last_name, phone, email, password, role) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [first_name, last_name, phone, email, hashedPassword, role]
-        );
-        res.status(201).json(result.rows[0]);
+        
+        // Insert the new staff into the database
+        const query = `
+            INSERT INTO staffs (first_name, last_name, phone, email, password, role)
+            VALUES (?, ?, ?, ?, ?, ?)`;
+
+        const result = await connection.promise().query(query, [first_name, last_name, phone, email, hashedPassword, role]);
+
+        // Respond with the newly created staff information
+        res.status(201).json({ id: result[0].insertId, first_name, last_name, email, role });
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error registering staff' });
@@ -150,60 +84,31 @@ app.post('/api/register-staff', async (req, res) => {
 });
 
 
-// // Route to login2
-// app.post('/api/login', async (req, res) => {
-//     const { email, password } = req.body;
-
-//     try {
-//         // First, check the staffs table
-//         let result = await pool.query('SELECT * FROM staffs WHERE email = $1', [email]);
-        
-//         // If no staff found, check the customers table
-//         if (result.rowCount === 0) {
-//             result = await pool.query('SELECT * FROM customers WHERE email = $1', [email]);
-//         }
-
-//         // If still no user found, return an error
-//         if (result.rowCount === 0) {
-//             return res.status(401).json({ error: 'Invalid credentials' });
-//         }
-
-//         const user = result.rows[0];
-//         const isMatch = await bcrypt.compare(password, user.password);
-
-//         if (!isMatch) {
-//             return res.status(401).json({ error: 'Invalid credentials' });
-//         }
-//         const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, 'secret_key');
-//         // const token = jwt.sign({ id: user.id, role: user.role }, 'secret_key');
-//         res.json({ token, role: user.role });
-//     } catch (err) {
-//         console.error(err);
-//         res.status(500).json({ error: 'Error logging in' });
-//     }
-// });
 
 
-// route to login 3 context
+
+
+
 // Route to login
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
         // First, check the staffs table
-        let result = await pool.query('SELECT * FROM staffs WHERE email = $1', [email]);
+        let [staffs] = await connection.promise().query('SELECT * FROM staffs WHERE email = ?', [email]);
         
         // If no staff found, check the customers table
-        if (result.rowCount === 0) {
-            result = await pool.query('SELECT * FROM customers WHERE email = $1', [email]);
+        if (staffs.length === 0) {
+            let [customers] = await connection.promise().query('SELECT * FROM customers WHERE email = ?', [email]);
+            // If still no user found, return an error
+            if (customers.length === 0) {
+                return res.status(401).json({ error: 'Invalid credentials' });
+            }
+            var user = customers[0];
+        } else {
+            var user = staffs[0];
         }
 
-        // If still no user found, return an error
-        if (result.rowCount === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
-
-        const user = result.rows[0];
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
@@ -230,44 +135,29 @@ app.post('/api/login', async (req, res) => {
 
 
 
-// Route to register a new customer
-app.post('/api/register', async (req, res) => {
-    const { first_name, last_name, phone_number, address, email, country, subcity, kebele, phobia, password } = req.body;
-    const role = 'customer'; // Set default role to customer
 
-    try {
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const result = await pool.query(
-            'INSERT INTO customers (first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, password) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-            [first_name, last_name, phone_number, address, email, country, subcity, kebele, role, phobia, hashedPassword]
-        );
-        res.status(201).json(result.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Error registering customer' });
-    }
-});
 
 
 
 // Route to get all staffs (excluding password)
 app.get('/api/staffs', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, first_name, last_name, phone, email, role FROM staffs'); // Exclude password
-        res.json(result.rows);
+        const [result] = await connection.promise().query('SELECT id, first_name, last_name, phone, email, role FROM staffs'); // Exclude password
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching staffs' });
     }
 });
 
+
+
+
 // Route to get all customers (excluding password)
 app.get('/api/customers', async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, first_name, last_name, phone_number, email, country, subcity, kebele FROM customers'); // Exclude password
-        res.json(result.rows);
+        const [result] = await connection.promise().query('SELECT id, first_name, last_name, phone_number, email, country, subcity, kebele FROM customers'); // Exclude password
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Error fetching customers' });
@@ -276,31 +166,53 @@ app.get('/api/customers', async (req, res) => {
 
 
 
+
+
+
+
+
+
 // Route to add a new pizza
 app.post('/api/pizzas', async (req, res) => {
     const { name, description, toppings, price } = req.body;
 
     try {
-        const result = await pool.query(
-            'INSERT INTO pizzas (name, description, toppings, price) VALUES ($1, $2, $3, $4) RETURNING *',
-            [name, description, toppings, price]
-        );
-        res.status(201).json(result.rows[0]);
+        // Ensure toppings are a comma-separated string
+        const toppingsString = Array.isArray(toppings) ? toppings.join(', ') : toppings;
+
+        // Debugging output
+        console.log('Inserting pizza:', { name, description, toppings: toppingsString, price });
+
+        const query = `
+            INSERT INTO pizzas (name, description, toppings, price)
+            VALUES (?, ?, ?, ?)`;
+        
+        const result = await connection.promise().query(query, [name, description, toppingsString, price]);
+
+        // Respond with the newly created pizza information
+        res.status(201).json({ id: result[0].insertId, name, description, toppings: toppingsString, price });
     } catch (err) {
-        console.error(err);
+        console.error('Error adding pizza:', err);
         res.status(500).json({ error: 'Error adding pizza' });
     }
 });
 
 
 
+
+
+
+
+
 // Route to get all pizzas
 app.get('/api/pizzas', async (req, res) => {
     try {
-        const result = await pool.query('SELECT * FROM pizzas');
-        res.json(result.rows);
+        const [result] = await connection.promise().query('SELECT * FROM pizzas');
+
+        
+        res.json(result);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching pizzas:', err);
         res.status(500).json({ error: 'Error fetching pizzas' });
     }
 });
@@ -309,46 +221,49 @@ app.get('/api/pizzas', async (req, res) => {
 
 
 
-// // POST endpoint to create an order
+
+
+
+// // Order pizza
 // app.post('/api/orders', async (req, res) => {
-//     const { email, pizzaName } = req.body;
-
-//     if (!email || !pizzaName) {
-//         return res.status(400).json({ error: 'Email and pizza name are required' });
-//     }
-
-//     try {
-//         const result = await pool.query(
-//             'INSERT INTO orders (email, pizza_name) VALUES ($1, $2) RETURNING *',
-//             [email, pizzaName]
-//         );
-//         res.status(201).json(result.rows[0]); // Send back the created order
-//     } catch (error) {
-//         console.error('Error creating order:', error);
-//         res.status(500).json({ error: 'Failed to create order' });
-//     }
-// });
-
-
-
-
-
-
-// // order two
-
-// app.post('/api/orders', async (req, res) => {
+//     console.log('Received order:', req.body); // Log the request body
 //     const { email, pizzaName, toppings } = req.body;
 
+//     // Validate the request body
 //     if (!email || !pizzaName || !toppings) {
 //         return res.status(400).json({ error: 'Email, pizza name, and toppings are required' });
 //     }
 
+//     const status = 'queued'; // Default status
+
 //     try {
-//         const result = await pool.query(
-//             'INSERT INTO orders (email, pizza_name, toppings) VALUES ($1, $2, $3) RETURNING *',
-//             [email, pizzaName, toppings]
+//         // Find customer by email
+//         const [customerResult] = await connection.promise().query(
+//             'SELECT id FROM customers WHERE email = ?',
+//             [email]
 //         );
-//         res.status(201).json(result.rows[0]); // Send back the created order
+//         const customerId = customerResult[0]?.id;
+
+//         // Find pizza by name
+//         const [pizzaResult] = await connection.promise().query(
+//             'SELECT id FROM pizzas WHERE name = ?',
+//             [pizzaName]
+//         );
+//         const pizzaId = pizzaResult[0]?.id;
+
+//         // Check if customer and pizza exist
+//         if (!customerId || !pizzaId) {
+//             return res.status(400).json({ error: 'Invalid email or pizza name' });
+//         }
+
+//         // Insert order into the database
+//         const [result] = await connection.promise().query(
+//             'INSERT INTO orders (email, pizza_name, toppings, status, customer_id, pizza_id) VALUES (?, ?, ?, ?, ?, ?)',
+//             [email, pizzaName, toppings, status, customerId, pizzaId]
+//         );
+
+//         // Send back the created order
+//         res.status(201).json({ id: result.insertId, email, pizzaName, toppings, status });
 //     } catch (error) {
 //         console.error('Error creating order:', error);
 //         res.status(500).json({ error: 'Failed to create order' });
@@ -356,39 +271,12 @@ app.get('/api/pizzas', async (req, res) => {
 // });
 
 
-
-
-
-// // order three add status 
-// app.post('/api/orders', async (req, res) => {
-//     const { email, pizzaName, toppings } = req.body;
-
-//     if (!email || !pizzaName || !toppings) {
-//         return res.status(400).json({ error: 'Email, pizza name, and toppings are required' });
-//     }
-
-//     // Set default status in the backend
-//     const status = 'queued'; // Default status when an order is placed
-
-//     try {
-//         const result = await pool.query(
-//             'INSERT INTO orders (email, pizza_name, toppings, status) VALUES ($1, $2, $3, $4) RETURNING *',
-//             [email, pizzaName, toppings, status] // Pass the status as 'queued'
-//         );
-//         res.status(201).json(result.rows[0]); // Send back the created order
-//     } catch (error) {
-//         console.error('Error creating order:', error);
-//         res.status(500).json({ error: 'Failed to create order' });
-//     }
-// });
-
-
-
-// order fkey
+// Order pizza
 app.post('/api/orders', async (req, res) => {
     console.log('Received order:', req.body); // Log the request body
     const { email, pizzaName, toppings } = req.body;
 
+    // Validate the request body
     if (!email || !pizzaName || !toppings) {
         return res.status(400).json({ error: 'Email, pizza name, and toppings are required' });
     }
@@ -396,28 +284,36 @@ app.post('/api/orders', async (req, res) => {
     const status = 'queued'; // Default status
 
     try {
-        const customerResult = await pool.query(
-            'SELECT id FROM customers WHERE email = $1',
+        // Find customer by email
+        const [customerResult] = await connection.promise().query(
+            'SELECT id FROM customers WHERE email = ?',
             [email]
         );
-        const customerId = customerResult.rows[0]?.id;
+        const customerId = customerResult[0]?.id;
 
-        const pizzaResult = await pool.query(
-            'SELECT id FROM pizzas WHERE name = $1',
+        // Find pizza by name
+        const [pizzaResult] = await connection.promise().query(
+            'SELECT id FROM pizzas WHERE name = ?',
             [pizzaName]
         );
-        const pizzaId = pizzaResult.rows[0]?.id;
+        const pizzaId = pizzaResult[0]?.id;
 
+        // Check if customer and pizza exist
         if (!customerId || !pizzaId) {
             return res.status(400).json({ error: 'Invalid email or pizza name' });
         }
 
-        const result = await pool.query(
-            'INSERT INTO orders (email, pizza_name, toppings, status, customer_id, pizza_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
-            [email, pizzaName, toppings, status, customerId, pizzaId]
+        // Join toppings array into a string
+        const toppingsString = Array.isArray(toppings) ? toppings.join(', ') : toppings;
+
+        // Insert order into the database
+        const [result] = await connection.promise().query(
+            'INSERT INTO orders (email, pizza_name, toppings, status, customer_id, pizza_id) VALUES (?, ?, ?, ?, ?, ?)',
+            [email, pizzaName, toppingsString, status, customerId, pizzaId]
         );
 
-        res.status(201).json(result.rows[0]); // Send back the created order
+        // Send back the created order
+        res.status(201).json({ id: result.insertId, email, pizzaName, toppings: toppingsString, status });
     } catch (error) {
         console.error('Error creating order:', error);
         res.status(500).json({ error: 'Failed to create order' });
@@ -428,10 +324,15 @@ app.post('/api/orders', async (req, res) => {
 
 
 
+
+
+
+
+
 // Route to get all orders with relevant details in super chef page
 app.get('/api/orders', async (req, res) => {
     try {
-        const result = await pool.query(`
+        const [result] = await connection.promise().query(`
             SELECT 
                 o.id AS order_id,
                 o.pizza_name,
@@ -444,9 +345,16 @@ app.get('/api/orders', async (req, res) => {
             FROM orders o
             JOIN customers c ON o.customer_id = c.id
         `);
-        res.json(result.rows);
+
+        // Convert toppings from string to array
+        const ordersWithArrayToppings = result.map(order => ({
+            ...order,
+            toppings: order.toppings ? order.toppings.split(',').map(topping => topping.trim()) : [] // Convert string to array
+        }));
+
+        res.json(ordersWithArrayToppings);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching orders:', err);
         res.status(500).json({ error: 'Error fetching orders' });
     }
 });
@@ -460,10 +368,11 @@ app.get('/api/orders', async (req, res) => {
 
 
 
+
 // Route to get all orders with relevant details in delivery page
 app.get('/api/deliveries', async (req, res) => {
     try {
-        const result = await pool.query(`
+        const [result] = await connection.promise().query(`
             SELECT 
                 o.id AS order_id,
                 p.name AS pizza_name,
@@ -479,9 +388,10 @@ app.get('/api/deliveries', async (req, res) => {
             JOIN customers c ON o.customer_id = c.id
             JOIN pizzas p ON o.pizza_id = p.id  -- Assuming pizza_id exists in orders
         `);
-        res.json(result.rows);
+        
+        res.json(result);
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching deliveries:', err);
         res.status(500).json({ error: 'Error fetching deliveries' });
     }
 });
@@ -491,7 +401,15 @@ app.get('/api/deliveries', async (req, res) => {
 
 
 
-// Route to update order status
+
+
+
+
+
+
+
+
+// Route to update order status of pizza
 app.put('/api/orders/:orderId/status', async (req, res) => {
     const { orderId } = req.params;
     const { status } = req.body; // Get the new status from the request body
@@ -500,19 +418,19 @@ app.put('/api/orders/:orderId/status', async (req, res) => {
         if (!status || !orderId) {
             return res.status(400).json({ error: 'Missing status or order ID' });
         }
-        await pool.query(`
+
+        await connection.promise().query(`
             UPDATE orders
-            SET status = $1
-            WHERE id = $2
+            SET status = ?
+            WHERE id = ?
         `, [status, orderId]);
 
         res.status(200).json({ message: 'Order status updated successfully' });
     } catch (err) {
-        console.error(err);
+        console.error('Error updating order status:', err);
         res.status(500).json({ error: 'Error updating order status' });
     }
 });
-
 
 
 
@@ -542,40 +460,21 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
-// // Route to get a user's order history
-// app.get('/api/orderhistory', authenticateToken, async (req, res) => {
-//     const userId = req.user.id; // Access user ID from the token
-//     console.log('Fetching order history for user ID:', userId);
-
-//     try {
-//         const result = await pool.query(`
-//             SELECT 
-               
-//                 p.name AS pizza_name,
-//                 p.price,
-//                 o.created_at AS order_date -- Change this line to use created_at
-//             FROM orders o
-//             JOIN pizzas p ON o.pizza_id = p.id
-//             WHERE o.customer_id = $1
-//         `, [userId]); // Assuming you have a customer_id in orders table
-
-//         console.log('Order history fetched:', result.rows);
-//         res.json(result.rows);
-//     } catch (err) {
-//         console.error('Error fetching user order history:', err);
-//         res.status(500).json({ error: 'Error fetching user order history' });
-//     }
-// });
 
 
-// add order status
+
+
+
+
+
+
 // Route to get a user's order history
 app.get('/api/orderhistory', authenticateToken, async (req, res) => {
     const userId = req.user.id; // Access user ID from the token
     console.log('Fetching order history for user ID:', userId);
 
     try {
-        const result = await pool.query(`
+        const [result] = await connection.promise().query(`
             SELECT 
                 p.name AS pizza_name,
                 p.price,
@@ -583,11 +482,11 @@ app.get('/api/orderhistory', authenticateToken, async (req, res) => {
                 o.status AS order_status      -- Add the status column
             FROM orders o
             JOIN pizzas p ON o.pizza_id = p.id
-            WHERE o.customer_id = $1
+            WHERE o.customer_id = ?
         `, [userId]); // Assuming you have a customer_id in orders table
 
-        console.log('Order history fetched:', result.rows);
-        res.json(result.rows);
+        console.log('Order history fetched:', result);
+        res.json(result);
     } catch (err) {
         console.error('Error fetching user order history:', err);
         res.status(500).json({ error: 'Error fetching user order history' });
@@ -600,13 +499,10 @@ app.get('/api/orderhistory', authenticateToken, async (req, res) => {
 
 
 
-
-
-
 // Route to get order status counts
 app.get('/api/admin/order-status-counts', async (req, res) => {
     try {
-        const result = await pool.query(`
+        const [result] = await connection.promise().query(`
             SELECT 
                 status, 
                 COUNT(*) AS count 
@@ -622,7 +518,7 @@ app.get('/api/admin/order-status-counts', async (req, res) => {
         };
 
         // Populate the counts based on the query result
-        result.rows.forEach(row => {
+        result.forEach(row => {
             statusCounts[row.status] = parseInt(row.count);
         });
 
@@ -638,11 +534,7 @@ app.get('/api/admin/order-status-counts', async (req, res) => {
 
 
 
-
-
-
-
-// Start server
+// Start the server
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server is running on port ${port}`);
 });
